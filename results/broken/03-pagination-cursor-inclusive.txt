@@ -1,11 +1,6 @@
- Container envkit-postgres-1 Running 
- Container envkit-postgres-1 Waiting 
- Container envkit-postgres-1 Healthy 
- Container envkit-test-run-5eb6d821f5ed Creating 
- Container envkit-test-run-5eb6d821f5ed Created 
---- FAIL: TestPaginationVisitsEveryOrderOnce (0.52s)
-    orders_test.go:391: order 65 returned on page 1 and again on page 2
+--- FAIL: TestPaginationVisitsEveryOrderOnce (0.10s)
+    orders_test.go:391: order 73 returned on page 1 and again on page 2
 FAIL
-FAIL	github.com/chipontix/env-kit/internal/orders	0.813s
+FAIL	github.com/chipontix/env-kit/internal/orders	1.540s
 FAIL
 

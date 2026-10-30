@@ -1,0 +1,65 @@
+$ docker compose --profile test run --rm test go test -race -count=1 -v ./...
+go: downloading github.com/jackc/pgx/v5 v5.11.0
+go: downloading github.com/jackc/pgpassfile v1.0.0
+go: downloading github.com/jackc/pgservicefile v0.0.0-20240606120523-5a60cdf6a761
+go: downloading golang.org/x/text v0.29.0
+go: downloading github.com/jackc/puddle/v2 v2.2.2
+go: downloading golang.org/x/sync v0.17.0
+?   	github.com/chipontix/env-kit/cmd/api	[no test files]
+?   	github.com/chipontix/env-kit/db	[no test files]
+=== RUN   TestHealthz
+--- PASS: TestHealthz (0.01s)
+=== RUN   TestSeededStackTakesAnOrder
+--- PASS: TestSeededStackTakesAnOrder (0.04s)
+PASS
+ok  	github.com/chipontix/env-kit/e2e	1.064s
+=== RUN   TestNext
+--- PASS: TestNext (0.00s)
+=== RUN   TestNormalizeMergesAndSorts
+--- PASS: TestNormalizeMergesAndSorts (0.00s)
+=== RUN   TestSeedDataIsLoaded
+=== PAUSE TestSeedDataIsLoaded
+=== RUN   TestCreateOrderComputesTotalAndTakesStock
+=== PAUSE TestCreateOrderComputesTotalAndTakesStock
+=== RUN   TestConcurrentOrdersNeverOversell
+=== PAUSE TestConcurrentOrdersNeverOversell
+=== RUN   TestRejectedOrderLeavesNoTrace
+=== PAUSE TestRejectedOrderLeavesNoTrace
+=== RUN   TestUnknownProductRejectedAtomically
+=== PAUSE TestUnknownProductRejectedAtomically
+=== RUN   TestRetryWithSameKeyReturnsSameOrder
+=== PAUSE TestRetryWithSameKeyReturnsSameOrder
+=== RUN   TestConcurrentRetriesCreateOneOrder
+=== PAUSE TestConcurrentRetriesCreateOneOrder
+=== RUN   TestKeyReusedWithDifferentBodyIsRejected
+=== PAUSE TestKeyReusedWithDifferentBodyIsRejected
+=== RUN   TestPaginationVisitsEveryOrderOnce
+=== PAUSE TestPaginationVisitsEveryOrderOnce
+=== RUN   TestStatusTransitions
+=== PAUSE TestStatusTransitions
+=== RUN   TestRequestValidation
+=== PAUSE TestRequestValidation
+=== CONT  TestSeedDataIsLoaded
+=== CONT  TestRetryWithSameKeyReturnsSameOrder
+=== CONT  TestConcurrentOrdersNeverOversell
+=== CONT  TestPaginationVisitsEveryOrderOnce
+--- PASS: TestSeedDataIsLoaded (0.02s)
+=== CONT  TestRequestValidation
+--- PASS: TestRetryWithSameKeyReturnsSameOrder (0.03s)
+=== CONT  TestStatusTransitions
+--- PASS: TestRequestValidation (0.02s)
+=== CONT  TestConcurrentRetriesCreateOneOrder
+--- PASS: TestConcurrentRetriesCreateOneOrder (0.35s)
+=== CONT  TestUnknownProductRejectedAtomically
+--- PASS: TestConcurrentOrdersNeverOversell (0.41s)
+=== CONT  TestKeyReusedWithDifferentBodyIsRejected
+--- PASS: TestPaginationVisitsEveryOrderOnce (0.42s)
+=== CONT  TestRejectedOrderLeavesNoTrace
+--- PASS: TestStatusTransitions (0.39s)
+=== CONT  TestCreateOrderComputesTotalAndTakesStock
+--- PASS: TestUnknownProductRejectedAtomically (0.02s)
+--- PASS: TestKeyReusedWithDifferentBodyIsRejected (0.02s)
+--- PASS: TestRejectedOrderLeavesNoTrace (0.02s)
+--- PASS: TestCreateOrderComputesTotalAndTakesStock (0.03s)
+PASS
+ok  	github.com/chipontix/env-kit/internal/orders	1.892s

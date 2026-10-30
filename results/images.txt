@@ -1,0 +1,4 @@
+$ docker image ls (filtered)
+envkit-api:latest 27MB
+golang:1.26-bookworm 1.23GB
+postgres:17-alpine 415MB

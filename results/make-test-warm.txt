@@ -1,0 +1,4 @@
+# warm runs: stack up, module and build caches populated; other containers on the VM: 14
+make test run 1: exit 0, 5.0 s
+make test run 2: exit 0, 4.3 s
+make test run 3: exit 0, 4.3 s

@@ -1,11 +1,6 @@
- Container envkit-postgres-1 Running 
- Container envkit-postgres-1 Waiting 
- Container envkit-postgres-1 Healthy 
- Container envkit-test-run-d22394c71ec3 Creating 
- Container envkit-test-run-d22394c71ec3 Created 
---- FAIL: TestConcurrentOrdersNeverOversell (0.59s)
+--- FAIL: TestConcurrentOrdersNeverOversell (0.88s)
     orders_test.go:250: oversold: 40 orders accepted for 5 units, 0 rejected as out of stock, 0 other errors; stock now 2
 FAIL
-FAIL	github.com/chipontix/env-kit/internal/orders	1.278s
+FAIL	github.com/chipontix/env-kit/internal/orders	1.889s
 FAIL
 

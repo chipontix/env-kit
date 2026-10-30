@@ -1,31 +1,13 @@
-# clean clone: git clone of commit 257d68d into an empty directory
-# volumes deleted (make down), envkit-api image removed; base images postgres:17-alpine, golang:1.26-bookworm, alpine:3.22 already pulled; Docker layer cache not cleared
-# started 2026-10-30T22:09:41Z, containers of other projects running: 11
+# git clone of 38b247f into an empty directory, 2026-10-30T22:11:12Z
+# no envkit volumes, no envkit-api image; base images already pulled, layer cache kept
+# other containers running on the same Docker VM: 13
 
 $ make up
-docker compose up -d --build --wait postgres api
- Image envkit-api Building 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
- Image envkit-api Built 
-# make up: exit , 20.1s
+docker compose --progress quiet up -d --build --wait postgres api
+# make up: exit 0, 40 s
 
 $ make test
-docker compose --profile test run --rm test go test -race -count=1 -timeout 5m ./...
+docker compose --progress quiet --profile test run --rm test go test -race -count=1 -timeout 5m ./...
 go: downloading github.com/jackc/pgx/v5 v5.11.0
 go: downloading github.com/jackc/pgpassfile v1.0.0
 go: downloading github.com/jackc/pgservicefile v0.0.0-20240606120523-5a60cdf6a761
@@ -34,26 +16,24 @@ go: downloading github.com/jackc/puddle/v2 v2.2.2
 go: downloading golang.org/x/sync v0.17.0
 ?   	github.com/chipontix/env-kit/cmd/api	[no test files]
 ?   	github.com/chipontix/env-kit/db	[no test files]
-ok  	github.com/chipontix/env-kit/e2e	1.062s
-ok  	github.com/chipontix/env-kit/internal/orders	2.053s
-# make test: exit , 29.5s
+ok  	github.com/chipontix/env-kit/e2e	1.154s
+ok  	github.com/chipontix/env-kit/internal/orders	1.963s
+# make test: exit 0, 52 s
 
 $ make test-broken
 ./scripts/test-broken.sh
 === 01-oversell-lost-update: applied, running tests
     caught. failed tests: TestConcurrentOrdersNeverOversell 
-    orders_test.go:250: oversold: 40 orders accepted for 5 units, 0 rejected as out of stock, 0 other errors; stock now 2
+    orders_test.go:250: oversold: 40 orders accepted for 5 units, 0 rejected as out of stock, 0 other errors; stock now 4
 === 02-decrement-outside-tx: applied, running tests
     caught. failed tests: TestRejectedOrderLeavesNoTrace TestUnknownProductRejectedAtomically 
-    orders_test.go:271: not atomic: stock of the in-stock product is 3 after the order was rejected, want 5
     orders_test.go:287: not atomic: stock = 4 after the order with an unknown product was rejected, want 5
+    orders_test.go:271: not atomic: stock of the in-stock product is 3 after the order was rejected, want 5
 === 03-pagination-cursor-inclusive: applied, running tests
     caught. failed tests: TestPaginationVisitsEveryOrderOnce 
-    orders_test.go:391: order 21 returned on page 1 and again on page 2
+    orders_test.go:391: order 26 returned on page 1 and again on page 2
 === 3/3 broken variants caught; tree restored
-# make test-broken: exit , 8.8s
+# make test-broken: exit 0, 11 s
 
-$ git status --short (after test-broken)
- M results/broken/01-oversell-lost-update.txt
- M results/broken/02-decrement-outside-tx.txt
- M results/broken/03-pagination-cursor-inclusive.txt
+$ git status --short -- . ':!results'
+# end of clean-clone check, status 0

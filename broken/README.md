@@ -34,7 +34,7 @@ stock >= $qty`.
 once order one unit each of a product with 5 in stock.
 
 ```
---- FAIL: TestConcurrentOrdersNeverOversell (0.59s)
+--- FAIL: TestConcurrentOrdersNeverOversell (0.88s)
     orders_test.go:250: oversold: 40 orders accepted for 5 units, 0 rejected as out of stock, 0 other errors; stock now 2
 ```
 
@@ -56,9 +56,9 @@ orders behave exactly as before.
 not exist):
 
 ```
---- FAIL: TestUnknownProductRejectedAtomically (0.02s)
+--- FAIL: TestUnknownProductRejectedAtomically (0.20s)
     orders_test.go:287: not atomic: stock = 4 after the order with an unknown product was rejected, want 5
---- FAIL: TestRejectedOrderLeavesNoTrace (0.10s)
+--- FAIL: TestRejectedOrderLeavesNoTrace (0.05s)
     orders_test.go:271: not atomic: stock of the in-stock product is 3 after the order was rejected, want 5
 ```
 
@@ -66,7 +66,7 @@ A second effect, seen in one of the first runs: every in-flight order now
 needs two pool connections (its transaction plus the autocommit), so with
 more concurrent orders than pool connections they all wait for each other.
 That run hung `TestConcurrentOrdersNeverOversell` until the 10-minute
-`go test` timeout. Since then the test client has a 10 s timeout, so a stuck
+`go test` timeout (that run's output was not kept). Since then the test client has a 10 s timeout, so a stuck
 request fails the test instead of hanging the suite. Whether the pool runs dry
 depends on timing, so the patch names only the two atomicity tests.
 
@@ -82,8 +82,8 @@ the next page. Every page still has the right size and order.
 7 orders with `limit=3` and requires each order exactly once:
 
 ```
---- FAIL: TestPaginationVisitsEveryOrderOnce (0.52s)
-    orders_test.go:391: order 65 returned on page 1 and again on page 2
+--- FAIL: TestPaginationVisitsEveryOrderOnce (0.10s)
+    orders_test.go:391: order 73 returned on page 1 and again on page 2
 ```
 
 With `limit=1` the same bug never ends (each page returns the cursor row

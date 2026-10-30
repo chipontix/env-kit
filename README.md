@@ -32,6 +32,14 @@ curl -XPOST localhost:15080/orders -H 'Idempotency-Key: demo-1' \
   -d '{"customer_id":1,"items":[{"product_id":2,"qty":1}]}'
 ```
 
+If the host port does not answer (seen on a colima VM whose port forwarder
+had stopped publishing new ports), the same requests work from inside the
+compose network, which is also all the tests need:
+
+```bash
+docker compose --profile test run --rm --no-deps test curl -s api:8080/products
+```
+
 <details><summary><code>error getting credentials</code> on pull (macOS, colima)</summary>
 
 If `~/.docker/config.json` says `"credsStore": "desktop"` but Docker Desktop
@@ -56,14 +64,33 @@ the `currentContext` that was in the old config.
 |---|---|
 | A clean clone comes up and passes with two commands | `git clone` into an empty directory, `make up && make test && make test-broken`: [results/clean-clone.txt](results/clean-clone.txt); CI repeats it on every push |
 | The suite catches each regression in `broken/`, on the test that names the bug | `make test-broken`: 3/3 caught, raw output in [results/broken/](results/broken/); CI job `broken` |
-| …every time, not by luck (two of the bugs are races) | `make catch-rate N=50`: CATCH_RATE_LINE |
-| The suite does not cry wolf | same run: CLEAN_LINE |
+| …every time, not by luck (bug 01 is a race, bug 02 also hits connection pool timing) | `make catch-rate N=50`: each patch caught in **50/50** runs ([results/catch-rate.txt](results/catch-rate.txt)) |
+| The suite does not cry wolf | same run: the clean tree passed the full suite in **50/50** runs |
 | `make test-broken` leaves the tree as it found it | CI runs `git diff --exit-code` after it; the script reverts in an `EXIT`/`INT`/`TERM` trap |
 | No data races in the code under test | every test run uses `-race` |
 
 ## Numbers
 
-NUMBERS_TABLE
+All from runs on one laptop, raw output in [`results/`](results/).
+
+| measurement | result | raw |
+|---|---|---|
+| tests | 15: 2 unit, 11 integration, 2 end-to-end | [test-verbose.txt](results/test-verbose.txt) |
+| clean clone: `make up` (API image built, Postgres initialised with seed) | 40 s | [clean-clone.txt](results/clean-clone.txt) |
+| clean clone: first `make test` (Go modules downloaded, race build from cold cache) | 52 s | same |
+| clean clone: `make test-broken`, 3 variants | 11 s, 3/3 caught | same |
+| warm `make test` | 5.0 s, 4.3 s, 4.3 s (3 runs) | [make-test-warm.txt](results/make-test-warm.txt) |
+| catch rate, 50 runs per variant | 50/50, 50/50, 50/50 caught; clean tree 50/50 passed; 2 min 40.8 s in all | [catch-rate.txt](results/catch-rate.txt) |
+
+**Hardware.** Apple M4 Max (16 cores, 48 GiB). Docker runs in a colima VM
+with 4 vCPU and 6 GiB, shared with other projects' compose stacks: 11 to 14
+containers, this project's included, were running on the VM during these
+measurements (counted with `docker ps -q` at each run, see the raw files). The clean-clone runs had the
+base images (`postgres:17-alpine`, `golang:1.26-bookworm`, `alpine:3.22`)
+already pulled and Docker's layer cache warm. A machine without them also
+pulls the images; on disk `golang:1.26-bookworm` is 1.23 GB and
+`postgres:17-alpine` 415 MB ([images.txt](results/images.txt)). Pull time was
+not measured.
 
 ## Architecture
 
@@ -114,7 +141,7 @@ scripts/            test-broken.sh, catch-rate.sh
   order or on what the e2e tests or a developer did to the seeded database.
 - **The handler runs in-process for integration tests.** A patch from
   `broken/` is picked up by recompiling the test, no image rebuild: the whole
-  `make test-broken` cycle is about ten seconds. The e2e package covers the
+  `make test-broken` cycle took 11 s in the clean-clone run. The e2e package covers the
   built container separately.
 - **Broken variants are patches, not build tags or flags.** A patch is
   exactly the diff a reviewer would see; nothing in the main code knows the
@@ -144,12 +171,20 @@ scripts/            test-broken.sh, catch-rate.sh
 - The seed is loaded by Postgres' init scripts, i.e. only into an empty
   volume. `make reset` gets back to seed data. There are no migrations for a
   schema change on existing data.
-- Three bugs are a sample, not a mutation-testing score; a tool such as a
-  mutation tester would find surviving mutants this suite does not kill.
+- Three bugs are a sample, not a mutation-testing score. A mutation tester
+  (not run here) would measure the suite against many more variants.
 
 ## Reproducing the numbers
 
-REPRO
+```bash
+make clean-clone        # results/clean-clone.txt: clone HEAD, time up / test / test-broken
+make catch-rate N=50    # results/catch-rate.txt
+make up && make test-broken   # results/broken/*.txt
+docker compose --profile test run --rm test go test -race -count=1 -v ./...   # test list
+```
+
+`make clean-clone` takes down this checkout's stack first: the clone uses the
+same compose project name.
 
 ## Third-party code
 
