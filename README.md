@@ -83,7 +83,7 @@ All from runs on one laptop, raw output in [`results/`](results/).
 | catch rate, 50 runs per variant | 50/50, 50/50, 50/50 caught; clean tree 50/50 passed; 2 min 40.8 s in all | [catch-rate.txt](results/catch-rate.txt) |
 
 **Hardware.** Apple M4 Max (16 cores, 48 GiB). Docker runs in a colima VM
-with 4 vCPU and 6 GiB, shared with other projects' compose stacks: 11 to 14
+with 4 vCPU and 6 GiB, shared with other projects' compose stacks: 12 to 14
 containers, this project's included, were running on the VM during these
 measurements (counted with `docker ps -q` at each run, see the raw files). The clean-clone runs had the
 base images (`postgres:17-alpine`, `golang:1.26-bookworm`, `alpine:3.22`)
