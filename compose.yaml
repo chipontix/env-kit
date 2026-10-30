@@ -1,0 +1,61 @@
+name: envkit
+
+services:
+  postgres:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_USER: envkit
+      POSTGRES_PASSWORD: envkit
+      POSTGRES_DB: envkit
+    ports:
+      - "${ENVKIT_PG_PORT:-15432}:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      # Applied once, on the first start of an empty volume.
+      - ./db/schema.sql:/docker-entrypoint-initdb.d/01-schema.sql:ro
+      - ./db/seed.sql:/docker-entrypoint-initdb.d/02-seed.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U envkit -d envkit"]
+      interval: 1s
+      timeout: 3s
+      retries: 30
+
+  api:
+    build: .
+    environment:
+      DATABASE_URL: postgres://envkit:envkit@postgres:5432/envkit?sslmode=disable
+    ports:
+      - "${ENVKIT_API_PORT:-15080}:8080"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:8080/healthz"]
+      interval: 1s
+      timeout: 3s
+      retries: 30
+
+  # Test runner: the Go toolchain in a container, so `make test` needs only
+  # Docker and make on the host. The source is mounted, not copied, so a
+  # patch from broken/ applied to the tree is what gets tested.
+  test:
+    profiles: [test]
+    image: golang:1.26-bookworm
+    working_dir: /src
+    volumes:
+      - .:/src
+      - gomod:/go/pkg/mod
+      - gocache:/root/.cache/go-build
+    environment:
+      PG_ADMIN_URL: postgres://envkit:envkit@postgres:5432/postgres?sslmode=disable
+      API_URL: http://api:8080
+      GOFLAGS: -mod=readonly
+      GOTOOLCHAIN: local
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+volumes:
+  pgdata:
+  gomod:
+  gocache:
