@@ -1,0 +1,13 @@
+ Container envkit-postgres-1 Running 
+ Container envkit-postgres-1 Waiting 
+ Container envkit-postgres-1 Healthy 
+ Container envkit-test-run-9a48b2e3204a Creating 
+ Container envkit-test-run-9a48b2e3204a Created 
+--- FAIL: TestUnknownProductRejectedAtomically (0.02s)
+    orders_test.go:287: not atomic: stock = 4 after the order with an unknown product was rejected, want 5
+--- FAIL: TestRejectedOrderLeavesNoTrace (0.10s)
+    orders_test.go:271: not atomic: stock of the in-stock product is 3 after the order was rejected, want 5
+FAIL
+FAIL	github.com/chipontix/env-kit/internal/orders	0.660s
+FAIL
+

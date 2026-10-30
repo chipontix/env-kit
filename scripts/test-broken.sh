@@ -34,7 +34,7 @@ for patch in broken/*.patch; do
 
 	set +e
 	docker compose --profile test run --rm -T test \
-		go test -race -count=1 ./internal/... >"$out/$name.txt" 2>&1
+		go test -race -count=1 -timeout 3m ./internal/... >"$out/$name.txt" 2>&1
 	code=$?
 	set -e
 	restore

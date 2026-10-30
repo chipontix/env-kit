@@ -2,9 +2,12 @@
 SHELL := /bin/bash
 COMPOSE := docker compose
 RUN_TESTS := $(COMPOSE) --profile test run --rm test
-GOTEST := go test -race -count=1
+GOTEST := go test -race -count=1 -timeout 5m
 
-.PHONY: up down reset test test-broken catch-rate logs
+.PHONY: help up down reset test test-broken catch-rate logs
+
+help:          ## list targets
+	@grep -E '^[a-z-]+:.*## ' $(MAKEFILE_LIST) | sed 's/:.*## /\t/'
 
 up:            ## build the API, start Postgres (schema + seed) and the API, wait until healthy
 	$(COMPOSE) up -d --build --wait postgres api

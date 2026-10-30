@@ -1,0 +1,22 @@
+Off-by-one in keyset pagination: the cursor row is repeated.
+
+List() filters id >= after instead of id > after. next_after is the id of
+the last row on a page, so that row comes back as the first row of the next
+page. Every page still has the right size and order, which is why a check of
+one page at a time passes.
+
+Expect-Fail: TestPaginationVisitsEveryOrderOnce
+
+diff --git a/internal/orders/store.go b/internal/orders/store.go
+index 91c7bad..25542e3 100644
+--- a/internal/orders/store.go
++++ b/internal/orders/store.go
+@@ -131,7 +131,7 @@ func (s *Store) List(ctx context.Context, customerID, after int64, limit int) ([
+ 	rows, err := s.pool.Query(ctx, `
+ 		SELECT id, customer_id, status, total_cents, created_at, updated_at
+ 		FROM orders
+-		WHERE ($1 = 0 OR customer_id = $1) AND id > $2
++		WHERE ($1 = 0 OR customer_id = $1) AND id >= $2
+ 		ORDER BY id
+ 		LIMIT $3`, customerID, after, limit+1)
+ 	if err != nil {

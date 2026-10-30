@@ -1,0 +1,25 @@
+Stock decrement runs outside the order's transaction.
+
+reserve() sends its UPDATE through the connection pool instead of the
+transaction it was given. Each decrement autocommits on its own connection,
+so when a later line of the same order is out of stock and the transaction
+rolls back, the earlier lines' stock stays taken: the order is gone but the
+units never come back. Compiles, and every single-line happy path still
+works.
+
+Expect-Fail: TestRejectedOrderLeavesNoTrace
+Expect-Fail: TestUnknownProductRejectedAtomically
+
+diff --git a/internal/orders/store.go b/internal/orders/store.go
+index 91c7bad..f08cc1e 100644
+--- a/internal/orders/store.go
++++ b/internal/orders/store.go
+@@ -75,7 +75,7 @@ func (s *Store) Create(ctx context.Context, req CreateRequest, key string) (o Or
+ // the last unit as free.
+ func (s *Store) reserve(ctx context.Context, tx pgx.Tx, it Item) (int64, error) {
+ 	var price int64
+-	err := tx.QueryRow(ctx, `
++	err := s.pool.QueryRow(ctx, `
+ 		UPDATE products SET stock = stock - $2
+ 		WHERE id = $1 AND stock >= $2
+ 		RETURNING price_cents`, it.ProductID, it.Qty).Scan(&price)

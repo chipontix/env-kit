@@ -1,0 +1,9 @@
+catch-rate: 50 runs per variant, 2026-10-30T22:06:37Z
+clean tree, full suite:          50/50 passed
+01-oversell-lost-update:         50/50 caught (^(TestConcurrentOrdersNeverOversell)$)
+02-decrement-outside-tx:         50/50 caught (^(TestRejectedOrderLeavesNoTrace|TestUnknownProductRejectedAtomically)$)
+03-pagination-cursor-inclusive:  50/50 caught (^(TestPaginationVisitsEveryOrderOnce)$)
+wall time: 2m40.78s (time ./scripts/catch-rate.sh 50)
+containers running at start: 12
+containers running at end: 13
+host: Apple M4 Max 16 cores 48 GiB; Docker in colima VM 4 vCPU / 6 GiB shared with other projects' stacks

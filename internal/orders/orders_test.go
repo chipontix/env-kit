@@ -29,6 +29,9 @@ var (
 	pool *pgxpool.Pool
 	srv  *httptest.Server
 	seq  atomic.Int64
+	// A request stuck on a lock or an exhausted pool fails the test instead
+	// of hanging the suite.
+	client = &http.Client{Timeout: 10 * time.Second}
 )
 
 func TestMain(m *testing.M) {
@@ -96,9 +99,10 @@ func call(t *testing.T, method, path string, body any, key string) (int, []byte)
 	if key != "" {
 		req.Header.Set("Idempotency-Key", key)
 	}
-	res, err := http.DefaultClient.Do(req)
+	res, err := client.Do(req)
 	if err != nil {
-		t.Fatal(err)
+		t.Errorf("%s %s: %v", method, path, err)
+		return 0, nil
 	}
 	defer res.Body.Close()
 	var buf bytes.Buffer
@@ -280,7 +284,7 @@ func TestUnknownProductRejectedAtomically(t *testing.T) {
 		t.Fatalf("POST /orders = %d %s, want 422", code, body)
 	}
 	if s := stock(t, p); s != 5 {
-		t.Fatalf("stock = %d after rejected order, want 5", s)
+		t.Fatalf("not atomic: stock = %d after the order with an unknown product was rejected, want 5", s)
 	}
 }
 

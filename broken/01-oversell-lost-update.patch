@@ -1,0 +1,44 @@
+Lost update on stock: check-then-write instead of a conditional decrement.
+
+reserve() reads the stock, checks it in Go and writes back the computed
+value. Under READ COMMITTED two transactions read the same stock, both pass
+the check and both write stock-1, so concurrent orders sell the same unit
+twice. The fix in main is one statement:
+UPDATE ... SET stock = stock - $qty WHERE id = $id AND stock >= $qty.
+
+Expect-Fail: TestConcurrentOrdersNeverOversell
+
+diff --git a/internal/orders/store.go b/internal/orders/store.go
+index 91c7bad..c050ba3 100644
+--- a/internal/orders/store.go
++++ b/internal/orders/store.go
+@@ -75,20 +75,18 @@ func (s *Store) Create(ctx context.Context, req CreateRequest, key string) (o Or
+ // the last unit as free.
+ func (s *Store) reserve(ctx context.Context, tx pgx.Tx, it Item) (int64, error) {
+ 	var price int64
+-	err := tx.QueryRow(ctx, `
+-		UPDATE products SET stock = stock - $2
+-		WHERE id = $1 AND stock >= $2
+-		RETURNING price_cents`, it.ProductID, it.Qty).Scan(&price)
++	var left int
++	err := tx.QueryRow(ctx, `SELECT price_cents, stock FROM products WHERE id = $1`, it.ProductID).Scan(&price, &left)
+ 	if errors.Is(err, pgx.ErrNoRows) {
+-		var exists bool
+-		if err := tx.QueryRow(ctx, `SELECT EXISTS (SELECT 1 FROM products WHERE id = $1)`, it.ProductID).Scan(&exists); err != nil {
+-			return 0, err
+-		}
+-		if !exists {
+-			return 0, ErrUnknownProduct
+-		}
++		return 0, ErrUnknownProduct
++	}
++	if err != nil {
++		return 0, err
++	}
++	if left < it.Qty {
+ 		return 0, ErrOutOfStock
+ 	}
++	_, err = tx.Exec(ctx, `UPDATE products SET stock = $2 WHERE id = $1`, it.ProductID, left-it.Qty)
+ 	return price, err
+ }
+ 
