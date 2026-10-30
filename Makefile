@@ -1,10 +1,10 @@
 # Everything runs in Docker: the host needs only Docker (with Compose v2) and make.
 SHELL := /bin/bash
-COMPOSE := docker compose
+COMPOSE := docker compose --progress quiet
 RUN_TESTS := $(COMPOSE) --profile test run --rm test
 GOTEST := go test -race -count=1 -timeout 5m
 
-.PHONY: help up down reset test test-broken catch-rate logs
+.PHONY: help up down reset test test-broken catch-rate clean-clone logs
 
 help:          ## list targets
 	@grep -E '^[a-z-]+:.*## ' $(MAKEFILE_LIST) | sed 's/:.*## /\t/'
@@ -25,6 +25,9 @@ test-broken:   ## apply each broken/*.patch, require its named tests to fail, re
 
 catch-rate:    ## run the suite N times on every broken patch and on the clean tree (N=20)
 	./scripts/catch-rate.sh $(or $(N),20)
+
+clean-clone:   ## acceptance: git clone HEAD to an empty dir, run up, test, test-broken there
+	./scripts/clean-clone-check.sh
 
 logs:          ## follow API and Postgres logs
 	$(COMPOSE) logs -f postgres api

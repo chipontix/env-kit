@@ -21,7 +21,7 @@ trap restore EXIT INT TERM
 
 # runs <-test.run regex>: prints how many of the n runs passed
 runs() {
-	docker compose --profile test run --rm -T test bash -c '
+	docker compose --progress quiet --profile test run --rm -T test bash -c '
 		set -e
 		go test -race -c -o /tmp/orders.test ./internal/orders
 		ok=0
